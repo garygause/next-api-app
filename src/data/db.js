@@ -30,14 +30,21 @@ export async function saveMeal(meal) {
 
   meal.image = `/images/${fileName}`;
 
-  db.prepare(
-    `
+  const result = db
+    .prepare(
+      `
     INSERT INTO meals
     (title, summary, instructions, creator, creator_email, image, slug)
     VALUES
     (@title, @summary, @instructions, @creator, @creator_email, @image, @slug)
   `
-  ).run(meal);
+    )
+    .run(meal);
+
+  const id = result.lastInsertRowid;
+  meal.id = id;
+  meal.slug = meal.slug + `-${id}`;
+  db.prepare('UPDATE meals SET slug = ? WHERE id = ?').run(meal.slug, id);
   return meal;
 }
 
